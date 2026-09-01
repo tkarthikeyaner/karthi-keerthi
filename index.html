@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#8F261F">
 <title>Karthi & Keerthi — Wedding Invitation</title>
+<!-- Final wedding palette + slideshow + music + event card refinement -->
 <style>
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -54,21 +55,39 @@ h2:after{content:"✦";display:block;margin:16px 0 0;color:#D59216;font-size:15p
 .events:before,.events:after{content:"❋";position:absolute;color:#C6922A;font-size:92px;opacity:.10;line-height:1}
 .events:before{top:30px;left:7vw;transform:rotate(-18deg)}
 .events:after{bottom:35px;right:7vw;transform:rotate(22deg)}
-.event-intro{max-width:620px;margin:0 auto 16px;font-size:16px;color:#68400F}
+.event-intro{max-width:620px;margin:0 auto 20px;font-size:16px;color:#68400F}
 .celebration-grid{position:relative;display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;width:min(1000px,100%);gap:8px;margin:25px 0 18px}
-.celebration-card{padding:32px 26px 30px;border-radius:30px;background:rgba(255,250,240,.95);box-shadow:0 20px 55px rgba(65,36,10,.10);transition:transform .25s ease,box-shadow .25s ease}
+.celebration-card{padding:30px 26px 30px;border-radius:30px;background:rgba(255,250,240,.96);box-shadow:0 20px 55px rgba(65,36,10,.10);transition:transform .25s ease,box-shadow .25s ease;position:relative;overflow:hidden}
+.celebration-card:before{content:"";position:absolute;left:0;right:0;top:0;height:5px}
+.reception-card:before{background:#D59216}
+.wedding-card:before{background:#8F261F}
 .celebration-card:hover{transform:translateY(-4px);box-shadow:0 26px 65px rgba(65,36,10,.14)}
-.event-icon{width:58px;height:58px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;border:1px solid #C6922A;border-radius:50%;background:#F8EDC9;color:#8F261F;font-size:27px;box-shadow:0 8px 24px rgba(198,146,42,.12)}
-.event-label{font-size:10px;letter-spacing:.22em;color:#9A5C16;font-weight:bold}
-.event h3{color:#8F261F;font-size:30px;margin:10px 0 12px}
+.event-icon,.wedding-icon{width:104px;height:104px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;border-radius:50%;overflow:hidden;box-shadow:0 9px 28px rgba(65,36,10,.10)}
+.event-icon{border:1px solid #C6922A;background:#F8EDC9;padding:17px}
+.event-icon svg{width:100%;height:100%}
+.event-icon img{width:100%;height:100%;object-fit:contain;display:block}
+.wedding-icon{border:3px double #C6922A;background:#F8EDC9}
+.wedding-icon img{width:100%;height:100%;object-fit:cover;object-position:center 56%;display:block}
+.reception-card .event-label,.wedding-card .event-label{margin-top:2px}
+.wedding-icon img{width:100%;height:100%;object-fit:cover;object-position:center 56%;display:block}
+.event-label{font-size:10px;letter-spacing:.22em;font-weight:bold}
+.reception-card .event-label{color:#9A5C16}
+.wedding-card .event-label{color:#8F261F}
+.event-type{font-size:10px;letter-spacing:.20em;font-weight:700;margin-top:7px}
+.reception-card .event-type{color:#9A5C16}
+.wedding-card .event-type{color:#8F261F}
+.event h3{font-size:31px;margin:10px 0 12px}
+.reception-card h3{color:#9A5C16}
+.wedding-card h3{color:#8F261F}
 .event-date{font-weight:700;font-size:18px;color:#41240A}
 .event-time{margin-top:8px;font-size:17px;color:#68400F}
-.event-rule{width:70px;height:1px;background:#C6922A;margin:20px auto 14px;position:relative}
+.event-rule{width:90px;height:1px;background:#C6922A;margin:20px auto 14px;position:relative}
 .event-rule:after{content:"✦";position:absolute;left:50%;top:50%;transform:translate(-50%,-54%);padding:0 6px;background:#FFFAF0;color:#C6922A;font-size:11px}
-.celebration-connector{display:flex;justify-content:center;align-items:center;height:100%}
-.celebration-connector span{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#8F261F;color:#FFF9EA;border:3px double #D59216;box-shadow:0 8px 22px rgba(143,38,31,.18)}
+.celebration-connector{display:flex;justify-content:center;align-items:center;height:100%;position:relative}
+.celebration-connector:before{content:"";position:absolute;top:12%;bottom:12%;width:1px;background:linear-gradient(180deg,transparent,#D59216 18%,#D59216 82%,transparent)}
+.celebration-connector span{position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#8F261F;color:#FFF9EA;border:3px double #D59216;box-shadow:0 8px 22px rgba(143,38,31,.18)}
 .celebration-note{margin:4px 0 14px;color:#8F261F;font-style:italic;font-size:16px}
-@media(max-width:700px){.celebration-grid{grid-template-columns:1fr;gap:0;width:min(620px,100%)}.celebration-connector{height:64px}.celebration-connector span{width:38px;height:38px}.celebration-card{padding:28px 20px}.event h3{font-size:27px}}
+@media(max-width:700px){.celebration-grid{grid-template-columns:1fr;gap:0;width:min(620px,100%)}.celebration-connector{height:64px}.celebration-connector:before{left:50%;top:0;bottom:0}.celebration-connector span{width:40px;height:40px}.celebration-card{padding:28px 20px}.event-icon,.wedding-icon{width:92px;height:92px}.event h3{font-size:27px}}
 .event h3{color:#8F261F;font-size:25px}
 .countdown{color:#8F261F;font-size:19px}
 .moment{background:linear-gradient(180deg,#FFF9EA,#F7EED7)}
@@ -121,10 +140,11 @@ input{width:min(90vw,520px);padding:15px 20px;border:1px solid #C6922A;border-ra
 <div class="script">Two beautiful moments</div>
 <p class="event-intro">With flowers, blessings and the people we love most.</p>
 
-<div class="grid celebration-grid">
-  <article class="event celebration-card">
-    <div class="event-icon">✺</div>
-    <div class="event-label">EVENING CELEBRATION</div>
+<div class="celebration-grid">
+  <article class="event celebration-card reception-card">
+    <div class="event-icon reception-icon" aria-hidden="true">
+      <img src="reception-icon.png" alt="" aria-hidden="true">
+    </div>
     <h3>Reception</h3>
     <div class="event-date">12 September 2026</div>
     <div class="event-time">6:00 PM onwards</div>
@@ -136,9 +156,10 @@ input{width:min(90vw,520px);padding:15px 20px;border:1px solid #C6922A;border-ra
     <span>♥</span>
   </div>
 
-  <article class="event celebration-card">
-    <div class="event-icon">✦</div>
-    <div class="event-label">THE WEDDING CEREMONY</div>
+  <article class="event celebration-card wedding-card">
+    <div class="wedding-icon">
+      <img src="wedding-icon.jpg" alt="" aria-hidden="true">
+    </div>
     <h3>Wedding</h3>
     <div class="event-date">13 September 2026</div>
     <div class="event-time">7:30 AM – 9:00 AM</div>
@@ -157,7 +178,7 @@ input{width:min(90vw,520px);padding:15px 20px;border:1px solid #C6922A;border-ra
 <h2>A beautiful beginning to a lifetime of shared moments.</h2>
 <div class="photo-frame">
 <img src="moment.jpg?v=2" alt="Karthi and Keerthi">
-<div class="caption">Here’s to all the little moments we’ll share, together. ❤️</div>
+<div class="caption">Hand in hand, heart to heart — and always together. ❤️</div>
 </div>
 </section>
 
