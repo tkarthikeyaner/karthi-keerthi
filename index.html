@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#8F261F">
 <title>Karthi & Keerthi — Wedding Invitation</title>
-<!-- Final wedding palette + slideshow + music + event card refinement -->
+<!-- Final wedding palette + music + photo-to-photo disintegration slideshow -->
 <style>
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -19,18 +19,15 @@ section:after{content:"";position:absolute;inset:22px 18px;border:1px solid rgba
 .hero-bg{position:absolute;inset:-35px;background:#8F261F center/cover no-repeat;filter:blur(14px);transform:scale(1.08);transition:background-image 1.8s ease}
 .hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,8,13,.05),rgba(30,8,13,.10) 45%,rgba(30,8,13,.94));z-index:1}
 .hero-slideshow{position:absolute;z-index:2;top:3vh;left:50%;transform:translateX(-50%);width:min(91vw,650px);height:66vh;border-radius:28px;background:#FFF9EA;box-shadow:0 25px 75px rgba(0,0,0,.34);overflow:hidden}
-.hero-slide{position:absolute;inset:-2.5%;width:105%;height:105%;object-fit:cover;object-position:center;opacity:0;will-change:opacity,transform,filter;animation:heroPhotoFlow 21s infinite cubic-bezier(.45,0,.2,1)}
-.hero-slide:nth-child(1){animation-delay:0s}
-.hero-slide:nth-child(2){animation-delay:-7s}
-.hero-slide:nth-child(3){animation-delay:-14s}
-@keyframes heroPhotoFlow{
-  0%{opacity:0;transform:scale(1.035);filter:blur(1.5px)}
-  3%{opacity:1;transform:scale(1.02);filter:blur(0)}
-  22%{opacity:1;transform:scale(1);filter:blur(0)}
-  28%{opacity:0;transform:scale(.985);filter:blur(1px)}
-  100%{opacity:0;transform:scale(.985);filter:blur(1px)}
-}
+.hero-slide{position:absolute;inset:-2.5%;width:105%;height:105%;object-fit:cover;object-position:center;opacity:0;transform:scale(1.035);will-change:transform,opacity;transition:opacity .8s ease,transform 14s cubic-bezier(.2,.7,.2,1)}
+.hero-slide.active{opacity:1;transform:scale(1)}
+/* Photo-to-photo disintegration: no white screen. The outgoing image breaks into warm dust while the next image rises underneath. */
+.photo-dust{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0}
+.photo-dust.active{opacity:1}
+.hero-slide.incoming{opacity:0;transform:scale(1.055);transition:opacity 1.35s ease,transform 2.6s cubic-bezier(.2,.7,.2,1)}
+.hero-slide.incoming.reveal{opacity:1;transform:scale(1)}
 .hero-slideshow:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,rgba(255,248,230,.03),rgba(143,38,31,.08));z-index:4;mix-blend-mode:multiply}
+@media(prefers-reduced-motion:reduce){.hero-slide{transition:none!important}.photo-dust{display:none!important}}
 .music-toggle{position:fixed;z-index:100;right:18px;top:18px;width:48px;height:48px;border:1px solid #C6922A;border-radius:50%;background:rgba(255,248,236,.96);color:#8F261F;font:inherit;font-size:20px;cursor:pointer;box-shadow:0 8px 24px rgba(101,38,50,.18);backdrop-filter:blur(8px);transition:transform .25s ease,background .25s ease,color .25s ease}
 .music-toggle.playing{background:#8F261F;color:#FFF9EA}
 .music-toggle.pulse{animation:musicPulse 1s ease-in-out 2}
@@ -121,6 +118,7 @@ input{width:min(90vw,520px);padding:15px 20px;border:1px solid #C6922A;border-ra
   <img class="hero-slide active" src="hero-ghibli.jpg" alt="Karthi and Keerthi">
   <img class="hero-slide" src="hero-lake.jpg" alt="Karthi and Keerthi by the lake">
   <img class="hero-slide" src="hero-temple.jpg" alt="Karthi and Keerthi at the temple">
+  <canvas class="photo-dust" id="photoDust" aria-hidden="true"></canvas>
 </div>
 <div class="hero-shade"></div>
 <div class="hero-content">
@@ -272,6 +270,206 @@ musicHint.addEventListener("keydown", e => {
 weddingMusic.addEventListener("play", updateMusicUi);
 weddingMusic.addEventListener("pause", updateMusicUi);
 updateMusicUi();
+
+/*
+   Hero slideshow timing:
+   - 12 seconds enjoying each photo
+   - ~2.8 seconds Thanos-style disintegration
+   - no white/blank transition
+   - the next photo appears underneath the flying dust
+*/
+const heroSlideshow = document.getElementById("heroSlideshow");
+const heroSlides = Array.from(document.querySelectorAll(".hero-slide"));
+const dustCanvas = document.getElementById("photoDust");
+const dustCtx = dustCanvas.getContext("2d", {willReadFrequently:true});
+let heroIndex = 0;
+let heroTimer = null;
+let heroRunning = true;
+let dustFrame = null;
+let dustParticles = [];
+let dustStartedAt = 0;
+let dustDpr = 1;
+
+function resizeDustCanvas(){
+  const rect = heroSlideshow.getBoundingClientRect();
+  dustDpr = Math.min(window.devicePixelRatio || 1, 2);
+  dustCanvas.width = Math.max(1, Math.round(rect.width * dustDpr));
+  dustCanvas.height = Math.max(1, Math.round(rect.height * dustDpr));
+  dustCanvas.style.width = rect.width + "px";
+  dustCanvas.style.height = rect.height + "px";
+}
+
+function waitForImage(img){
+  return img.complete && img.naturalWidth ? Promise.resolve() : new Promise(resolve => {
+    img.addEventListener("load", resolve, {once:true});
+    img.addEventListener("error", resolve, {once:true});
+  });
+}
+
+function makeDustFromImage(img){
+  resizeDustCanvas();
+  const W = dustCanvas.width, H = dustCanvas.height;
+  dustCtx.clearRect(0,0,W,H);
+
+  const source = document.createElement("canvas");
+  source.width = W; source.height = H;
+  const ctx = source.getContext("2d", {willReadFrequently:true});
+
+  const iw = img.naturalWidth || 1, ih = img.naturalHeight || 1;
+  const scale = Math.max(W / iw, H / ih);
+  const dw = iw * scale, dh = ih * scale;
+  const dx = (W - dw) / 2, dy = (H - dh) / 2;
+  ctx.drawImage(img, dx, dy, dw, dh);
+
+  let data;
+  try { data = ctx.getImageData(0,0,W,H).data; }
+  catch(e){ return false; }
+
+  // Keep the particle count sensible on phones while retaining enough detail to read as dust.
+  const area = W * H;
+  const step = Math.max(5, Math.round(Math.sqrt(area / 2300)));
+  const scaleForParticle = Math.max(1, step * 0.8);
+  dustParticles = [];
+
+  for(let y = step/2; y < H; y += step){
+    for(let x = step/2; x < W; x += step){
+      const ix = Math.min(W-1, Math.floor(x));
+      const iy = Math.min(H-1, Math.floor(y));
+      const i = (iy * W + ix) * 4;
+      const a = data[i+3];
+      if(a < 90) continue;
+
+      // More particles around the centre/right side gives the effect a subtle "snap" direction.
+      const cx = W * .48, cy = H * .47;
+      const dx0 = x - cx, dy0 = y - cy;
+      const dist = Math.hypot(dx0,dy0) || 1;
+      const directional = 0.65 + Math.max(0, dx0 / W) * 1.15;
+      dustParticles.push({
+        x, y,
+        ox:x, oy:y,
+        vx:(dx0/dist) * (0.55 + Math.random()*1.35) * directional + (Math.random()-.2)*.55,
+        vy:(dy0/dist) * (0.18 + Math.random()*.75) - Math.random()*.55,
+        size:scaleForParticle * (.55 + Math.random()*.9),
+        alpha:a/255,
+        rot:Math.random()*Math.PI,
+        spin:(Math.random()-.5)*.05,
+        wobble:Math.random()*Math.PI*2,
+        life:.72 + Math.random()*.28,
+        r:data[i], g:data[i+1], b:data[i+2]
+      });
+    }
+  }
+  return dustParticles.length > 100;
+}
+
+function renderDust(t){
+  const elapsed = (t - dustStartedAt) / 1000;
+  const duration = 1.2;
+  const p = Math.min(1, elapsed / duration);
+  dustCtx.clearRect(0,0,dustCanvas.width,dustCanvas.height);
+
+  // Ease out: the image snaps apart quickly, then the last dust motes drift away.
+  const ease = 1 - Math.pow(1-p, 3);
+  const W = dustCanvas.width, H = dustCanvas.height;
+  for(const q of dustParticles){
+    const delay = (1-q.life) * .34;
+    const local = Math.max(0, Math.min(1, (p-delay)/(1-delay)));
+    const e = 1 - Math.pow(1-local, 2.2);
+    q.x = q.ox + q.vx * W * .42 * e + Math.sin(q.wobble + elapsed*5) * W * .004 * e;
+    q.y = q.oy + q.vy * H * .38 * e + (H * .10) * e * e;
+    const alpha = q.alpha * (1 - Math.max(0,(local-.58)/.42)) * (0.92 - .16*p);
+    if(alpha <= .01) continue;
+    const size = q.size * (1 - .12*e);
+    dustCtx.save();
+    dustCtx.globalAlpha = alpha;
+    dustCtx.translate(q.x,q.y);
+    dustCtx.rotate(q.rot + q.spin*elapsed*60);
+    dustCtx.fillStyle = `rgb(${q.r},${q.g},${q.b})`;
+    dustCtx.fillRect(-size/2,-size/2,size,size);
+    dustCtx.restore();
+  }
+
+  if(p < 1 && heroRunning){
+    dustFrame = requestAnimationFrame(renderDust);
+  }else{
+    dustCtx.clearRect(0,0,W,H);
+    dustCanvas.classList.remove("active");
+    dustFrame = null;
+  }
+}
+
+async function nextHeroPhoto(){
+  if(!heroRunning || heroSlides.length < 2 || dustFrame) return;
+
+  const current = heroSlides[heroIndex];
+  const nextIndex = (heroIndex + 1) % heroSlides.length;
+  const next = heroSlides[nextIndex];
+  await waitForImage(current);
+  await waitForImage(next);
+
+  // Prepare the next photo underneath the dust.
+  next.classList.add("incoming");
+  next.classList.remove("active","reveal");
+  void next.offsetWidth;
+
+  const made = makeDustFromImage(current);
+  if(!made){
+    // Safe fallback: simple crossfade, still with no white screen.
+    current.classList.remove("active");
+    next.classList.add("active","reveal");
+    next.classList.remove("incoming");
+    heroIndex = nextIndex;
+    scheduleHeroPhoto();
+    return;
+  }
+
+  dustCanvas.classList.add("active");
+  current.classList.remove("active");
+
+  // Let the new image bloom in while the old one is disintegrating.
+  requestAnimationFrame(() => {
+    next.classList.add("active","reveal");
+    setTimeout(() => next.classList.remove("incoming"), 80);
+  });
+
+  heroIndex = nextIndex;
+  dustStartedAt = performance.now();
+  dustFrame = requestAnimationFrame(renderDust);
+
+  setTimeout(() => {
+    if(dustFrame){ cancelAnimationFrame(dustFrame); dustFrame=null; }
+    dustCtx.clearRect(0,0,dustCanvas.width,dustCanvas.height);
+    dustCanvas.classList.remove("active");
+    scheduleHeroPhoto();
+  }, 2950);
+}
+
+function scheduleHeroPhoto(){
+  clearTimeout(heroTimer);
+  if(heroRunning && heroSlides.length > 1){
+    heroTimer = setTimeout(nextHeroPhoto, 3000);
+  }
+}
+
+window.addEventListener("resize", () => {
+  if(!dustFrame) resizeDustCanvas();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden){
+    heroRunning = false;
+    clearTimeout(heroTimer);
+    if(dustFrame){ cancelAnimationFrame(dustFrame); dustFrame=null; }
+    dustCtx.clearRect(0,0,dustCanvas.width,dustCanvas.height);
+    dustCanvas.classList.remove("active");
+  }else{
+    heroRunning = true;
+    scheduleHeroPhoto();
+  }
+});
+
+resizeDustCanvas();
+scheduleHeroPhoto();
 
 const target=new Date("2026-09-13T07:30:00+05:30");
 function tick(){
