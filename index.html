@@ -19,11 +19,18 @@ section:after{content:"";position:absolute;inset:22px 18px;border:1px solid rgba
 .hero-bg{position:absolute;inset:-35px;background:#8F261F center/cover no-repeat;filter:blur(14px);transform:scale(1.08);transition:background-image 1.8s ease}
 .hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,8,13,.05),rgba(30,8,13,.10) 45%,rgba(30,8,13,.94));z-index:1}
 .hero-slideshow{position:absolute;z-index:2;top:3vh;left:50%;transform:translateX(-50%);width:min(91vw,650px);height:66vh;border-radius:28px;background:#FFF9EA;box-shadow:0 25px 75px rgba(0,0,0,.34);overflow:hidden}
-.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;animation:heroCrossfade 21s infinite ease-in-out}
+.hero-slide{position:absolute;inset:-2.5%;width:105%;height:105%;object-fit:cover;object-position:center;opacity:0;will-change:opacity,transform,filter;animation:heroPhotoFlow 21s infinite cubic-bezier(.45,0,.2,1)}
 .hero-slide:nth-child(1){animation-delay:0s}
 .hero-slide:nth-child(2){animation-delay:-7s}
 .hero-slide:nth-child(3){animation-delay:-14s}
-@keyframes heroCrossfade{0%,17.857%{opacity:1}25%,100%{opacity:0}}
+@keyframes heroPhotoFlow{
+  0%{opacity:0;transform:scale(1.035);filter:blur(1.5px)}
+  3%{opacity:1;transform:scale(1.02);filter:blur(0)}
+  22%{opacity:1;transform:scale(1);filter:blur(0)}
+  28%{opacity:0;transform:scale(.985);filter:blur(1px)}
+  100%{opacity:0;transform:scale(.985);filter:blur(1px)}
+}
+.hero-slideshow:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,rgba(255,248,230,.03),rgba(143,38,31,.08));z-index:4;mix-blend-mode:multiply}
 .music-toggle{position:fixed;z-index:100;right:18px;top:18px;width:48px;height:48px;border:1px solid #C6922A;border-radius:50%;background:rgba(255,248,236,.96);color:#8F261F;font:inherit;font-size:20px;cursor:pointer;box-shadow:0 8px 24px rgba(101,38,50,.18);backdrop-filter:blur(8px);transition:transform .25s ease,background .25s ease,color .25s ease}
 .music-toggle.playing{background:#8F261F;color:#FFF9EA}
 .music-toggle.pulse{animation:musicPulse 1s ease-in-out 2}
