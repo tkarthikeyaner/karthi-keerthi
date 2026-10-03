@@ -1,5 +1,7 @@
 # Smart Cleaner (Android)
 
+Find and clean large files and duplicates across photos, videos, audio and documents. Daily scheduled scans with notifications, Material 3 UI, and Xiaomi-ready background handling.
+
 Kotlin · Jetpack Compose · Material 3 · WorkManager · DataStore · Coil. Min Android 8.0 (API 26), target API 35.
 
 ## Architecture
@@ -19,7 +21,29 @@ app/src/main/java/com/karthi/smartcleaner/
 - A `Mutex` keeps the scheduled scan and a manual scan from running at the same time.
 - Nothing is deleted without the confirmation dialog; the last copy of a duplicate group can't be marked for deletion.
 
-## Develop on a Xiaomi phone (MIUI / HyperOS)
+## Build & launch on your Xiaomi phone (no PC)
+
+The project lives on the phone at `/storage/emulated/0/Apps/Mobile-Application`.
+
+1. Install **Termux** from F-Droid (https://f-droid.org/packages/com.termux/) or its GitHub releases. The Play Store version is outdated and can't install packages.
+2. Open Termux and run:
+   ```sh
+   termux-setup-storage        # tap "Allow" so Termux can read /storage/emulated/0
+   bash /storage/emulated/0/Apps/Mobile-Application/scripts/build-on-phone.sh
+   ```
+   The script installs Java 17 and an ARM `aapt2`, downloads the Android SDK, builds the app, copies `SmartCleaner-debug.apk` to **Download**, and opens the installer.
+   The first run takes 10–20 minutes and downloads about 400 MB, so stay on Wi-Fi. Later runs only rebuild what changed.
+3. When asked, allow **Termux → Install unknown apps**, then tap **Install**. On MIUI's "risky app" screen, tap **Install anyway**.
+4. **Launch**: open **Smart Cleaner** (the blue/teal broom icon) from the home screen or app drawer.
+5. **First launch**:
+   - Tap **Grant access** and turn on *Allow access to manage all files*.
+   - Allow notifications.
+   - Go to **Settings → Background reliability** and tap **Allow** (battery) and **Open** (Autostart → enable Smart Cleaner).
+6. After editing code in the folder, run the script again. The new build installs over the old one.
+
+If the build stops with an `aapt2` error, Termux's `aapt2` is too old for this Gradle plugin. Use the cloud build below instead.
+
+## Other ways to build
 
 ### Option A — cloud build, install on the phone (no PC)
 1. Push to any branch of `tkarthikeyaner/Mobile-Application`; GitHub Actions runs **Smart Cleaner APK**.

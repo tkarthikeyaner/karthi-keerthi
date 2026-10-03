@@ -76,7 +76,7 @@ fun FileListScreen(
     LaunchedEffect(filter) { vm.setSelection(emptySet()) }
 
     val files = remember(state.result, filter, sort) {
-        val result = state.result ?: return@remember emptyList()
+        val result = state.result ?: return@remember emptyList<ScannedFile>()
         val base = if (filter == FileFilter.LARGE) result.largeFiles else result.files.filter { it.category == filter.category }
         when (sort) {
             SortOrder.SIZE -> base.sortedByDescending { it.size }

@@ -14,4 +14,6 @@ All notable changes to Smart Cleaner. Follows [Semantic Versioning](https://semv
 - Material 3 dashboard grouped by Photos, Videos, Audio, Documents and Other; dark/light/system theme and Material You dynamic color.
 - Review & cleanup: multi-select lists, keep/delete chips per duplicate, and a mandatory confirmation dialog where each file can still be kept.
 - Xiaomi (MIUI / HyperOS) background reliability: battery-optimisation exemption prompt and Autostart shortcut so the daily scan isn't killed.
+- Adaptive launcher icon (gradient broom with sparkles, themed-icon support on Android 13+).
+- One-command on-phone build via Termux (`scripts/build-on-phone.sh`).
 - GitHub Actions pipeline producing installable APKs on every push and a GitHub Release on `v*` tags.

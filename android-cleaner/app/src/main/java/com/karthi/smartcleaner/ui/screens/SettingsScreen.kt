@@ -51,6 +51,7 @@ import com.karthi.smartcleaner.data.ThemeMode
 import com.karthi.smartcleaner.ui.MainViewModel
 import com.karthi.smartcleaner.ui.formatBytes
 import com.karthi.smartcleaner.ui.formatTime
+import kotlin.math.roundToInt
 
 private val THRESHOLD_STEPS_MB = listOf(5, 10, 25, 50, 100, 250, 500, 1000, 2000, 4000)
 
@@ -86,12 +87,12 @@ fun SettingsScreen(
                 val initialIndex = THRESHOLD_STEPS_MB.indexOfFirst { it >= s.thresholdMb }.takeIf { it >= 0 }
                     ?: THRESHOLD_STEPS_MB.lastIndex
                 var index by remember(s.thresholdMb) { mutableFloatStateOf(initialIndex.toFloat()) }
-                val mb = THRESHOLD_STEPS_MB[index.toInt()]
+                val mb = THRESHOLD_STEPS_MB[index.roundToInt()]
                 Text("Flag files ≥ ${formatBytes(mb * 1024L * 1024L)}", style = MaterialTheme.typography.bodyLarge)
                 Slider(
                     value = index,
                     onValueChange = { index = it },
-                    onValueChangeFinished = { vm.setThresholdMb(THRESHOLD_STEPS_MB[index.toInt()]) },
+                    onValueChangeFinished = { vm.setThresholdMb(THRESHOLD_STEPS_MB[index.roundToInt()]) },
                     valueRange = 0f..THRESHOLD_STEPS_MB.lastIndex.toFloat(),
                     steps = THRESHOLD_STEPS_MB.size - 2,
                 )
