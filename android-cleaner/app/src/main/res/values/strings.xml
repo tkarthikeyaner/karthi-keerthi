@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smart Cleaner</string>
+    <string name="channel_scan_name">Daily scan reports</string>
+    <string name="channel_scan_desc">Summary of the scheduled storage scan</string>
+</resources>
