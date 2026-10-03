@@ -19,27 +19,46 @@ app/src/main/java/com/karthi/smartcleaner/
 - A `Mutex` keeps the scheduled scan and a manual scan from running at the same time.
 - Nothing is deleted without the confirmation dialog; the last copy of a duplicate group can't be marked for deletion.
 
-## Build & install from your phone (no PC needed)
+## Develop on a Xiaomi phone (MIUI / HyperOS)
 
-1. **Get the APK built in the cloud**: every push that touches `android-cleaner/` runs the *Smart Cleaner APK* workflow on GitHub Actions.
-   - In the GitHub app or mobile browser, open the repo → **Actions** → latest *Smart Cleaner APK* run → **Artifacts** → download `SmartCleaner-x.y.z` (a zip; open it in your Files app).
-   - Or **publish a release**: on github.com (mobile browser) → **Releases** → **Draft a new release** → tag `v1.0.0` → **Publish**. The workflow attaches `SmartCleaner-1.0.0.apk` to the release page, and you can download it directly.
-2. **Install**: tap the APK and allow *Install unknown apps* for your browser/Files app when prompted.
-3. **First run**: tap **Grant access** and enable *Allow access to manage all files*, then allow notifications.
-4. **Test the daily scan**: in Settings, set the scan time 2–3 minutes ahead and lock the phone. You should get a summary notification shortly after that time (Android may delay it by a few minutes in battery saver/Doze).
+### Option A — cloud build, install on the phone (no PC)
+1. Push to any branch of `tkarthikeyaner/Mobile-Application`; GitHub Actions runs **Smart Cleaner APK**.
+2. On the phone: GitHub app / browser → **Actions** → latest run → **Artifacts** → `SmartCleaner-x.y.z` → open the zip in **File Manager** → tap the APK.
+   For a direct APK link, publish a release instead: **Releases → Draft a new release → tag `v1.0.0` → Publish**; the APK is attached automatically.
+3. MIUI shows *"Install blocked / risky app"*: tap **Settings → allow from this source**, then **Install anyway**. (Turn off *MIUI optimisation* only if installs keep failing.)
 
-Builds are signed with the fixed key in `app/ci-debug.keystore`, so new versions install over old ones. Use a private key (GitHub secrets) before publishing to the Play Store.
+### Option B — PC + Android Studio, deploy to the Xiaomi over USB or Wi-Fi
+1. **Developer options**: Settings → About phone → tap **MIUI version** / **OS version** 7 times.
+2. Settings → Additional settings → **Developer options**, enable:
+   - **USB debugging**
+   - **Install via USB** (needs a signed-in Mi account and, on some models, a SIM card)
+   - **USB debugging (Security settings)** (lets Android Studio grant permissions / tap dialogs)
+3. Connect USB, accept the RSA prompt on the phone, then in the repo:
+   ```sh
+   ./gradlew installDebug          # or press Run in Android Studio
+   adb logcat -s ScanWorker WM-WorkerWrapper
+   ```
+   Wireless: Developer options → **Wireless debugging** → *Pair device with pairing code* → `adb pair <ip:port>` then `adb connect <ip:port>`.
 
-### Optional: build on the phone itself (Termux)
+### Required Xiaomi settings for the daily scan
+MIUI/HyperOS kills background jobs aggressively. In the app open **Settings → Background reliability** (shown automatically on Xiaomi/Redmi/POCO):
+- **Battery optimisation → Allow** (system prompt), and
+- **Autostart → Open** → enable Smart Cleaner.
+- Also: phone Settings → Apps → Manage apps → Smart Cleaner → **Battery saver → No restrictions**, and keep **Notifications** on.
 
-On-device Gradle builds need an ARM `aapt2` and are fragile; the cloud build above is recommended. If you still want to try:
+### Testing checklist on the phone
+| Check | How |
+|---|---|
+| Storage access | Grant access → toggle *Allow access to manage all files* → dashboard scans automatically |
+| Large files | Settings → threshold 5 MB → *Large files* count rises without a rescan |
+| Duplicates | Copy a photo in File Manager (creates `name(1).jpg`) → Rescan → appears under *Identical content* |
+| Delete flow | Select files → *Delete* → untick one in the dialog → only ticked files are removed; Gallery updates |
+| Daily scan | Set scan time 2–3 min ahead, lock the phone → summary notification arrives |
+| Inspect the schedule (USB) | `adb shell am broadcast -a androidx.work.diagnostics.REQUEST_DIAGNOSTICS -p com.karthi.smartcleaner.debug` then `adb logcat -s WM-DiagnosticsWrkr` |
+| Theme | Settings → Light / Dark / System, *Dynamic color* (HyperOS / MIUI 13+ on Android 12+) |
 
-```sh
-pkg install openjdk-17 git
-git clone https://github.com/tkarthikeyaner/karthi-keerthi && cd karthi-keerthi/android-cleaner
-./gradlew assembleDebug   # requires an Android SDK set up for Termux (sdk.dir in local.properties)
-```
+Builds are signed with the fixed key in `app/ci-debug.keystore`, so new versions install over old ones (debug build id: `com.karthi.smartcleaner.debug`, release: `com.karthi.smartcleaner`). Use a private key from GitHub secrets before publishing to Play Store.
 
 ## Local development
 
-Open `android-cleaner/` in Android Studio, or run `./gradlew testDebugUnitTest assembleDebug`.
+Open the project root in Android Studio (Ladybug or newer, JDK 17), or run `./gradlew testDebugUnitTest assembleDebug`.

@@ -1,6 +1,9 @@
 package com.karthi.smartcleaner.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,9 +40,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.karthi.smartcleaner.BuildConfig
+import com.karthi.smartcleaner.data.BackgroundReliability
 import com.karthi.smartcleaner.data.ThemeMode
 import com.karthi.smartcleaner.ui.MainViewModel
 import com.karthi.smartcleaner.ui.formatBytes
@@ -116,6 +123,8 @@ fun SettingsScreen(
                 }
             }
 
+            if (s.scheduleEnabled) BackgroundReliabilityCard()
+
             SettingsCard("Appearance") {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     ThemeMode.entries.forEachIndexed { i, mode ->
@@ -159,6 +168,55 @@ fun SettingsScreen(
             },
             dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Cancel") } },
         )
+    }
+}
+
+@Composable
+private fun BackgroundReliabilityCard() {
+    val context = LocalContext.current
+    var exempt by remember { mutableStateOf(BackgroundReliability.isIgnoringBatteryOptimizations(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        exempt = BackgroundReliability.isIgnoringBatteryOptimizations(context)
+    }
+    if (exempt && !BackgroundReliability.isXiaomi) return
+
+    SettingsCard("Background reliability") {
+        Text(
+            if (BackgroundReliability.isXiaomi) {
+                "Xiaomi phones stop background apps aggressively. Allow both settings below or the daily scan may not run."
+            } else {
+                "Allow background running so the daily scan isn't delayed or skipped."
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (exempt) "Battery optimisation: off ✓" else "Battery optimisation: on",
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (!exempt) {
+                TextButton(onClick = {
+                    try {
+                        context.startActivity(BackgroundReliability.batteryExemptionIntent(context))
+                    } catch (_: ActivityNotFoundException) {
+                        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                    }
+                }) { Text("Allow") }
+            }
+        }
+        if (BackgroundReliability.isXiaomi) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Autostart (MIUI / HyperOS)", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                TextButton(onClick = { BackgroundReliability.openAutostartSettings(context) }) { Text("Open") }
+            }
+            Text(
+                "Also: Settings › Apps › Smart Cleaner › Battery saver › No restrictions.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
